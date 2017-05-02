@@ -1,0 +1,18 @@
+{
+  "name": "book_manager",
+  "authors": [
+    "Maxim <maxim.brown@gmail.com>"
+  ],
+  "description": "Management application for book projects",
+  "main": "index.php",
+  "license": "MIT",
+  "homepage": "github.com/z0331/book-manager",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
