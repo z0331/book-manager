@@ -78,16 +78,36 @@ function generateHtmlBySeason($client, $season, $year) {
     }
 
 if (!empty($_POST)) {
-    $newBook = new stdClass();
-    $newBook->_id = $_POST['isbn'];
-    $newBook->type = 'book';
-    foreach ($_POST as $key=>$value) {
-        $newBook->$key = $value;
-    }
+    //Try to load document from $_POST isbn
     try {
-        $response = $client->storeDoc($newBook);
-    } catch (Exception $e) {
-        echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
+        $book = $client->getDoc($_POST['isbn']);
+    }
+    catch (Exception $e) {
+        echo $e->getMessage . " " . $e->getCode() . "<br>";
+    }
+    //If document has been loaded, store new values into it as update
+    if ($book) {
+        try {
+            foreach ($_POST as $key=>$value) {
+                $book->$key = $value;
+            }
+            $response = $client->storeDoc($book);
+        } catch (Exception $e) {
+            echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
+        }
+    }
+    //If no document, create a new book 
+    else {
+        $newBook = new stdClass();
+        $newBook->_id = $_POST['isbn'];
+        foreach ($_POST as $key=>$value) {
+            $newBook->$key = $value;
+        }
+        try {
+            $response = $client->storeDoc($newBook);
+        } catch (Exception $e) {
+            echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
+        }
     }
 }
 
