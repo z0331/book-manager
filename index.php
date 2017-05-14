@@ -1,3 +1,9 @@
+<?php
+include __DIR__ . '/inc/head.php';
+require __DIR__ . '/inc/functions.php';
+require __DIR__ . '/vendor/autoload.php';
+?>
+
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="css/jquery-ui.min.css">
 <script src="external/jquery/jquery.js"></script>
@@ -5,10 +11,6 @@
 <script src="js/jquery-ui.min.js"></script>
 
 <?php
-require __DIR__ . '/vendor/autoload.php';
-
-include __DIR__ . '/inc/head.php';
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -20,64 +22,7 @@ use PHPOnCouch\Couch,
 
 $client = new CouchClient("localhost:5984", "book_manager");
 
-function generateHtmlBySeason($client, $season, $year) {
-        $listHtml = "<tr class='season'><td colspan=100>";
-        $yearSeasonBooks = $client->key([$season, $year])->getView('bySeason', 'bySeasonYear');
-        $listHtml .= $season . " " . $year . "</td></tr>";
-        $listHtml .= "<tbody class='season-tab'><tr id='season-headers'>"
-            . "<th>Title</th>"
-            . "<th>Subtitle</th>"
-            . "<th>Contributors</th>"
-            . "<th>ISBN</th>"
-            . "<th>EISBN</th>"
-            . "<th>Imprint</th>"
-            . "<th>MS Delivery</th>"
-            . "<th>Edits to Author</th>"
-            . "<th>MS Revision</th>"
-            . "<th>To Copyedit</th>"
-            . "<th>MS Finalized</th>"
-            . "<th>To Production (ARC)</th>"
-            . "<th>To Press (ARC)</th>"
-            . "<th>To Production (No ARC)</th>"
-            . "<th>To Press</th>"
-            . "<th>Publication Date</th></tr>";
-
-        foreach($yearSeasonBooks->rows as $book) {
-            $listHtml .= "<tr class='book'><td>" 
-                . "<a href='viewBook.php?isbn=" . $book->value->isbn . "'>"
-                . $book->value->title
-                . "</a></td><td>" 
-                . $book->value->subtitle . "</td><td>";
-                foreach($book->value->contributor as $contributor) {
-                    $listHtml .= $contributor . "<br>";
-                }
-            $listHtml .= "</td>"
-                . "<td>" . $book->value->isbn . "</td>"
-                . "<td>" . $book->value->eisbn . "</td>"
-                . "<td>" . $book->value->imprint . "</td>"
-                . "<td>" . $book->value->manuscript_date . "</td>"
-                . "<td>" . $book->value->edits_to_author . "</td>"
-                . "<td>" . $book->value->revisions_in . "</td>"
-                . "<td>" . $book->value->to_copyedit . "</td>"
-                . "<td>" . $book->value->manuscript_finalized . "</td>";
-            $arcProd = "No ARC";
-            $arcPress = "No ARC";
-            if($book->value->arc === 'ARC') {
-                $arcProd = $book->value->arc_prod_date;
-                $arcPress = $book->value->arc_press_date;
-            }
-            $listHtml .= "<td>" . $arcProd . "</td>"
-                . "<td>" . $arcPress . "</td>"
-                . "<td>" . $book->value->prod_date . "</td>"
-                . "<td>" . $book->value->press_date . "</td>"
-                . "<td>" . $book->value->pub_date . "</td>"
-                . "</tr>";
-        }
-        $listHtml .= "</tbody>";
-        return $listHtml;
-    }
-
-if (!empty($_POST)) {
+if (isset($_POST['update_book'])) {
     //Try to load document from $_POST isbn
     try {
         $book = $client->getDoc($_POST['isbn']);
@@ -96,34 +41,80 @@ if (!empty($_POST)) {
             echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
         }
     }
+} else if (isset($_POST['new_book'])) {
     //If no document, create a new book 
-    else {
-        $newBook = new stdClass();
-        $newBook->_id = $_POST['isbn'];
-        foreach ($_POST as $key=>$value) {
-            $newBook->$key = $value;
-        }
-        try {
-            $response = $client->storeDoc($newBook);
-        } catch (Exception $e) {
-            echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
-        }
+    $newBook = new stdClass();
+    $newBook->_id = $_POST['isbn'];
+    $newBook->title = $_POST['title'];
+    $newBook->subtitle = $_POST['subtitle'];
+    $newBook->contributor = $_POST['contributor'];
+    $newBook->isbn = $_POST['isbn'];
+    $newBook->eisbn = $_POST['eisbn'];
+    $newBook->imprint = $_POST['imprint'];
+    $newBook->season = $_POST['season'];
+    $newBook->season_year = $_POST['season_year'];
+    $newBook->arc = $_POST['arc'];
+    $newBook->pub_date = $_POST['pub_date'];
+    $deadlines = array(
+        'manuscript_date' => array(
+            'deadline_date' => $_POST['manuscript_date'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'edits_to_author' => array(
+            'deadline_date' => $_POST['edits_to_author'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'revisions_in' => array(
+            'deadline_date' => $_POST['revisions_in'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'to_copyedit' => array(
+            'deadline_date' => $_POST['to_copyedit'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'manuscript_finalized' => array(
+            'deadline_date' => $_POST['manuscript_finalized'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'arc_prod_date' => array(
+            'deadline_date' => $_POST['arc_prod_date'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'arc_press_date' => array(
+            'deadline_date' => $_POST['arc_press_date'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'prod_date' => array(
+            'deadline_date' => $_POST['prod_date'],
+            'complete' => false,
+            'complete_date' => ''
+        ),
+        'press_date' => array(
+            'deadline_date' => $_POST['press_date'],
+            'complete' => false,
+            'complete_date' => ''
+        )
+    );
+    $newBook->deadlines = $deadlines;
+    try {
+        $response = $client->storeDoc($newBook);
+    } catch (Exception $e) {
+        echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
     }
+} else if (isset($_POST['update_list'])) {
+    updateCompletedDeadline($client, $_POST['completed']);
 }
 
 try {
     $allSeasonYears = $client->group(true)->getView('allBooks', 'seasonYear');
-    $years = array();
-    $springBooks = array();
-    $fallBooks = array();
-    $html = "<table id='book-list' border=1>";
 
-    
-    foreach ($allSeasonYears->rows as $row) {
-        $html .= generateHtmlBySeason($client, 'spring', $row->key);
-        $html .= generateHtmlBySeason($client, 'fall', $row->key);
-    }
-    $html .= "</table>";
 }   catch (Exception $e) {
         echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
 }
@@ -131,5 +122,87 @@ try {
 ?>
 
 <div class="container">
-    <?php echo $html; ?>
+    <div class="row">
+        <form method="post" action="index.php">
+            <button id="update_list" name="update_list">Update</button>
+            <table id='book-list' border=1>
+                <?php foreach ($allSeasonYears->rows as $row) {
+                    $seasons = array('spring', 'fall');
+                    $year = $row->key;
+                    foreach ($seasons as $season) { 
+                        $yearSeasonBooks = $client->key([$season, $year])->getView('bySeason', 'bySeasonYear');?>
+                        <tr class='season'>
+                            <td colspan=100>
+                                <?= $season . " " . $year; ?>
+                            </td>
+                        </tr>
+                        <tbody class='season-tab' <?php if (checkCurrentSeason($season, $year)): ?>
+                            id='current-season-tbody'
+                            <?php endif; ?>>
+                            <tr id='season-headers'>
+                                <th>Title</th>
+                                <th>Subtitle</th>
+                                <th>Contributors</th>
+                                <th>ISBN</th>
+                                <th>EISBN</th>
+                                <th>Imprint</th>
+                                <th>MS Delivery</th>
+                                <th>Edits to Author</th>
+                                <th>MS Revision</th>
+                                <th>To Copyedit</th>
+                                <th>MS Finalized</th>
+                                <th>To Production (ARC)</th>
+                                <th>To Press (ARC)</th>
+                                <th>To Production (No ARC)</th>
+                                <th>To Press</th>
+                                <th>Publication Date</th>
+                            </tr>
+                            <?php foreach($yearSeasonBooks->rows as $book) { ?>
+                                <tr class='book'>
+                                    <td> 
+                                        <a href='viewBook.php?isbn=<?=$book->value->isbn?>'>
+                                        <?=$book->value->title?></a>
+                                    </td>
+                                    <td> 
+                                        <?=$book->value->subtitle?>
+                                    </td>
+                                    <td>
+                                        <?php foreach($book->value->contributor as $contributor) {
+                                                echo $contributor . "<br>";
+                                            } ?>
+                                    </td>
+                                    <td>
+                                        <?=$book->value->isbn?>
+                                    </td>
+                                    <td>
+                                        <?=$book->value->eisbn?>
+                                    </td>
+                                    <td>
+                                        <?=$book->value->imprint?>
+                                    </td>
+                                    <?php
+                                        foreach ($book->value->deadlines as $deadline=>$details) {
+                                            $arc = false;
+                                            if($book->value->arc) {
+                                                $arc = true;
+                                            }
+                                            echo generateDateBoxHtml($details->deadline_date, 
+                                                $deadline,
+                                                $book->value->isbn, 
+                                                $arc, 
+                                                $details->complete, 
+                                                $details->complete_date);
+                                        } //End deadline loop
+                                    ?>
+                                    <td>
+                                        <?=$book->value->pub_date?>
+                                    </td>
+                                </tr>
+                            <?php } //End book loop ?>
+                        </tbody>
+                    <?php } //End season loop
+                } //End year loop ?>
+            </table>
+        </form>
+    </div>
 </div>

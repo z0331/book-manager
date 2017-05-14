@@ -1,19 +1,25 @@
-var script = document.createElement('script');
-script.src = 'external/jquery/jquery.js';
-script.type = 'text/javascript';
-document.getElementsByTagName('head')[0].appendChild(script)
-
-
+toggleVisibility = function() {
+    return this.css('visibility', function(i, visibility) {
+        return (visibility == 'visibile') ? 'collapse' : 'visible';
+    });
+}
 
 $(document).ready(function() {
 
     //Toggle season tab visibility on index.php
     $('.season').click(function(e) {
         e.preventDefault();
-        $(this).parent().next('tbody').toggle();
+        if ($(this).parent().next('tbody').css('visibility') == 'collapse') {
+            $(this).parent().next('tbody').css('visibility', 'visible');
+        } else {
+            $(this).parent().next('tbody').css('visibility', 'collapse');
+        }
+        
     });
 
-    //Add new contributor field to new and edit book pages
+    /*
+    * Add and delete new contributors from basic info 
+    */
     $('#new_contributor').click(function(e) {
         e.preventDefault();
         $('#contributors').append('<div id="contributor">'
@@ -22,10 +28,25 @@ $(document).ready(function() {
                 + '</div>');
     });
 
-    //Remove last new contributor field from new and edit book pages
     $('#delete_contributor').click(function(e) {
         e.preventDefault();
         $('#contributors #contributor:last').remove();
+    });
+
+    /*
+    * Add and delete new custom fields
+    */
+    $('#new_field').click(function(e) {
+        e.preventDefault();
+        $('#custom-fields').append('<div id="custom-field">Field:<br>'
+                + '<input type="text" id="field_name" name="field[name][]" value="Field Name" />'
+                + '<input type="text" id="field" name="field[value][]" />'
+                + '</div>');
+    });
+
+    $('#delete_field').click(function(e) {
+        e.preventDefault();
+        $('#custom-fields #custom-field:last').remove();
     });
 
     /*
@@ -34,10 +55,10 @@ $(document).ready(function() {
     $('#default_pub_schedule').click(function(e) {
         e.preventDefault();
         var pub_date = moment($('#pub_date').val());
-        var arc_prod = moment(pub_date.subtract(20, 'w'));  //To production for ARC
-        var arc_press = moment(pub_date.add(4, 'w'));       //To press for ARC
-        var to_prod = moment(pub_date.add(4, 'w'));         //To production no ARC
-        var to_press = moment(pub_date.add(4, 'w'));        //To press final
+        var arc_prod = moment(pub_date.subtract(26, 'w'));  //To production for ARC
+        var arc_press = moment(pub_date.add(2, 'w'));       //To press for ARC
+        var to_prod = moment(pub_date.add(8, 'w'));         //To production no ARC
+        var to_press = moment(pub_date.add(5, 'w'));        //To press final
 
         if($('#arc').is(':checked')) {  //Check if ARC box is checked to fill in those dates
             $('#arc_prod_date').val(arc_prod.format('YYYY-MM-DD'));
