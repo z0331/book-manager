@@ -1,5 +1,6 @@
 <?php
     require __DIR__ . '/vendor/autoload.php';
+    require __DIR__ . '/inc/functions.php';
     include __DIR__ . '/inc/head.php';
 
     ini_set('display_errors', 1);
@@ -38,7 +39,7 @@
             New Book
         </div>
         <div class="row">
-            <div class="col-1-3">
+            <div class="col-1-3 basic-data">
                 <h2>Basic Data</h2>
                 <div class="">
                     <label for="title">Title: </label>
@@ -88,11 +89,11 @@
                 </div>
             </div>
             <div class="col-1-3">
-                <h2>Editorial Schedule</h2>
                 <div id="edit_schedule">
+                    <h2>Editorial Schedule</h2>
                     <div id="edit_schedule_dates">
                         <div class="">
-                            <label for="manuscript_delivery">Manuscript Delivery: </label>
+                            <label for="manuscript_date">Manuscript Delivery: </label>
                             <input type="text" id="manuscript_date" class="date" name="manuscript_date" />
                             <button type="button" id="default_edit_schedule" name="default_edit_schedule">Default Schedule</button>
                         </div>
@@ -115,8 +116,8 @@
                     </div>
                 </div>
 
-                <h2>Production Schedule</h2>
                 <div id="pub_schedule">
+                    <h2>Production Schedule</h2>
                     <div class="">
                         <label for="pub_date">Publication Date: </label>
                         <input type="text" id="pub_date" class="date" name="pub_date" />

@@ -22,7 +22,7 @@ function generateDateBoxHtml($date, $dateType, $isbn, $arc = false, $completed =
     }
     //Else, check if deadline is completed
     else if ($completed) {
-        $html = "<td class='deadline completed'>" . $completeDate . "</td>";
+        $html = "<td class='deadline completed'>Completed: " . $completeDate . "</td>";
     }
     //Otherwise, move on to general deadline box, regardless of if empty of not
     else {
@@ -122,5 +122,28 @@ function updateCompletedDeadline($client, $postDataArray) {
         echo $e->getMessage . " " . $e->getCode() . "<br>";
     }
 }
+
+
+/*
+* checkIfArrayDifferent
+*
+* Checks and compiles array elements that are different between two arrays.
+* Used to figure out if changes have been made to book document.
+*
+* @param (array) Original array to compare to
+* @param (array) Possibly modified array to check if different
+* @return (array) Array containing any values in arrayTwo that differ from arrayOne
+*/
+function checkIfArrayDifferent($arrayOne, $arrayTwo) {
+    $differences = array();
+    foreach ($arrayTwo as $element=>$value) {
+        if (!array_key_exists($element, $arrayOne) || $arrayOne[$element] != $arrayTwo[$element]) {
+            $differences[] = $element;
+        }
+    }
+    return $differences;
+}
+
+
 
 ?>

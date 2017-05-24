@@ -1,5 +1,6 @@
 <?php
-    require __DIR__ . '/vendor/autoload.php';
+    require __DIR__ . '/vendor/autoload.php'; 
+    require __DIR__ . '/inc/functions.php';
     include __DIR__ . '/inc/head.php';
 
     ini_set('display_errors', 1);
@@ -18,6 +19,7 @@
 <link rel="stylesheet" href="css/jquery-ui.min.css">
 <script src="js/moment.js"></script>
 <script src="external/jquery/jquery.js"></script>
+<script src="js/script.js"></script>
 <script src="js/jquery-ui.min.js"></script>
 
 <script>
@@ -36,35 +38,89 @@
 $bookIsbn = $_GET['isbn'];
 
 try {
-    $bookByIsbn = $client->getDoc($bookIsbn);
+
+    /* 
+    *  Create an array from POST deadline fields that is comparable to the CouchDB document deadline array.
+    *  New array will contain any updates made, including whether deadline has been marked complete.
+    *  If complete, array will be loaded with today's date as date of completion.
+    */
+    $bookByIsbn = $client->getDoc($bookIsbn);                       //Pull book info from document for display
+    $bookTest = $client->asArray()->getDoc($bookIsbn);              //Pull same info as array for comparison to POST
+    
+    
+    if (isset($_POST['update_book'])) {
+        $newBookValues = array();                                   //Array to store POST array data
+        $newDeadlines = array();                                    //Array to store new deadline information
+        $newBookValues = $_POST;                                    //Copy POST array to variable in order to restore new deadline information
+        foreach($_POST['deadlines'] as $deadline=>$value) {
+            $newDeadlines[$deadline] = array(
+                'deadline_date' => $value['deadline_date']
+            );
+            if(!empty($value['complete'])) {
+                $newDeadlines[$deadline]['complete'] = true;
+                $newDeadlines[$deadline]['complete_date'] = date('Y-m-d');
+            }
+            else {
+                $newDeadlines[$deadline]['complete'] = false;
+                $newDeadlines[$deadline]['complete_date'] = "";
+            }
+        }
+
+        // Convert new deadlines array to object and store it.
+        // NOTE: apparently using json_decode here offers slower performance than creating
+        // a looping function, but frankly this is easier/cleaner and these arrays are not big enough
+        // for it to matter.
+        $newBookValues['deadlines'] = json_decode(json_encode($newDeadlines), false);
+        
+        /* 
+        *  Check for which fields are between POST and the saved data.
+        *  Store those fields in array $differences.
+        */ 
+        $differences = array();
+        $differences = checkIfArrayDifferent($bookTest, $newBookValues);
+
+        foreach($differences as $field) {
+            $bookByIsbn->$field = $newBookValues[$field];
+        }
+        try {
+            $response = $client->storeDoc($bookByIsbn);
+            } catch (Exception $e) {
+                echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
+        }
+        // Update stuff
+        // Go through fields that are different or new and update those fields
+        // Go through deadline fields that are different and update those elements
+
+    }
+
+    
 }   catch (Exception $e) {
         echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
 }
 
-//Prepare array of proper deadline values to load into form
-//If task is marked as completed, load the completed date
-//Else, load the original deadline date
+/* 
+*  Prepare array of proper deadline values to load into form
+*  If task is marked as completed, load the completed date
+*  Else, load the original deadline date
+*/
 $deadlines = array();
 $deadlineValues = array();
 foreach ($bookByIsbn->deadlines as $deadline=>$details) {
     $deadlines[$deadline] = $details;
 }
 foreach ($deadlines as $deadline=>$values) {
-    if ($values->complete) {
-        $deadlineValues[$deadline] = "Completed " . $values->complete_date;
-    }
-    else $deadlineValues[$deadline] = $values->deadline_date;
+    $deadlineValues[$deadline] = $values->deadline_date;
 }
 
 ?>
 
 <div class="container form">
-    <form method="post" action="index.php">
+    <form method="post" action="">
         <div>
             Edit Book
         </div>
         <div class="row">
-            <div class="col-1-3">
+            <div class="col-1-3" id="basic-data">
                 <h2>Basic Data</h2>
                 <div class="">
                     <label for="title" class="form-label">Title: </label>
@@ -73,6 +129,14 @@ foreach ($deadlines as $deadline=>$values) {
                 <div class="">
                     <label for="subtitle" class="form-label">Subtitle: </label>
                     <input type="text" id="subtitle" class="form-input" name="subtitle" value="<?=$bookByIsbn->subtitle ?>" />
+                </div>
+                <div class="">
+                    <label for="isbn" class="form-label">ISBN: </label>
+                    <?=$bookByIsbn->isbn ?>
+                </div>
+                <div class="">
+                    <label for="eisbn" class="form-label">EISBN: </label>
+                    <?=$bookByIsbn->eisbn ?>
                 </div>
                 <div class="">
                     <div id="contributors">
@@ -87,14 +151,6 @@ foreach ($deadlines as $deadline=>$values) {
                     </div>
                     <button type="button" id="new_contributor" name="new_contributor">Add Contributor</button>
                     <button type="button" id="delete_contributor" name="delete_contributor">Delete Contributor</button>
-                </div>
-                <div class="">
-                    <label for="isbn" class="form-label">ISBN: </label>
-                    <input type="text" id="isbn" class="form-input" name="isbn" value="<?=$bookByIsbn->isbn ?>" />
-                </div>
-                <div class="">
-                    <label for="eisbn" class="form-label">EISBN: </label>
-                    <input type="text" id="eisbn" class="form-input" name="eisbn" value="<?=$bookByIsbn->eisbn ?>" />
                 </div>
                 <div class="">
                     <label for="imprint" class="form-label">Imprint: </label>
@@ -123,34 +179,54 @@ foreach ($deadlines as $deadline=>$values) {
                 </div>
             </div>
             <div class="col-1-3">
-                <h2>Editorial Schedule</h2>
-                <div id="edit_schedule">
+                <div id="edit-schedule">
+                    <h2>Editorial Schedule</h2>
                     <div id="edit_schedule_dates">
                         <div class="">
-                            <label for="manuscript_delivery" class="form-label">Manuscript Delivery: </label>
-                            <input type="text" id="manuscript_date" class="form-input date" name="manuscript_date" value="<?=$deadlineValues['manuscript_date'] ?>" />
+                            <label for="manuscript_date" class="form-label">Manuscript Delivery: </label>
+                            <input type="text" class="form-input date" name="deadlines[manuscript_date][deadline_date]" value="<?=$deadlineValues['manuscript_date'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[manuscript_date][complete]' value='checked' <?php if($deadlines['manuscript_date']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['manuscript_date']->complete) ? $deadlines['manuscript_date']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                         <div class="">
                             <label for="edits_to_author" class="form-label">Edits to Author: </label>
-                            <input type="text" id="edits_to_author" class="form-input date" name="edits_to_author" value="<?=$deadlineValues['edits_to_author'] ?>" />
+                            <input type="text" class="form-input date" name="deadlines[edits_to_author][deadline_date]" value="<?=$deadlineValues['edits_to_author'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[edits_to_author][complete]' value='checked' <?php if($deadlines['edits_to_author']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['edits_to_author']->complete) ? $deadlines['edits_to_author']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                         <div class="">
                             <label for="revisions_in" class="form-label">Revisions In: </label>
-                            <input type="text" id="revisions_in" class="form-input date" name="revisions_in" value="<?=$deadlineValues['revisions_in'] ?>" />
+                            <input type="text" class="form-input date" name="deadlines[revisions_in][deadline_date]" value="<?=$deadlineValues['revisions_in'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[revisions_in][complete]' value='checked' <?php if($deadlines['revisions_in']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['revisions_in']->complete) ? $deadlines['revisions_in']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                         <div class="">
                             <label for="to_copyedit" class="form-label">To Copyedit: </label>
-                            <input type="text" id="to_copyedit" class="form-input date" name="to_copyedit" value="<?=$deadlineValues['to_copyedit'] ?>" />
+                            <input type="text" class="form-input date" name="deadlines[to_copyedit][deadline_date]" value="<?=$deadlineValues['to_copyedit'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[to_copyedit][complete]' value='checked' <?php if($deadlines['to_copyedit']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['to_copyedit']->complete) ? $deadlines['to_copyedit']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                         <div class="">
                             <label for="manuscript_finalized" class="form-label">Manuscript Finalized: </label>
-                            <input type="text" id="manuscript_finalized" class="form-input date" name="manuscript_finalized" value="<?=$deadlineValues['manuscript_finalized'] ?>" />
+                            <input type="text" class="form-input date" name="deadlines[manuscript_finalized][deadline_date]" value="<?=$deadlineValues['manuscript_finalized'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[manuscript_finalized][complete]' value='checked' <?php if($deadlines['to_copyedit']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['manuscript_finalized']->complete) ? $deadlines['manuscript_finalized']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <h2>Production Schedule</h2>
-                <div id="pub_schedule">
+                <div id="pub-schedule">
+                    <h2>Production Schedule</h2>
                     <div class="">
                         <label for="pub_date" class="form-label">Publication Date: </label>
                         <input type="text" id="pub_date" class="form-input date" name="pub_date" value="<?=$bookByIsbn->pub_date ?>" />
@@ -158,19 +234,35 @@ foreach ($deadlines as $deadline=>$values) {
                     <div id="pub_schedule_dates">
                         <div class="">
                             <label for="arc_prod_date" class="form-label">To Production (ARC): </label>
-                            <input type="text" id="arc_prod_date" class="form-input date" name="arc_prod_date" value="<?=$deadlineValues['arc_prod_date'] ?>" />
+                            <input type="text" class="form-input date" name="deadlines[arc_prod_date][deadline_date]" value="<?=$deadlineValues['arc_prod_date'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[arc_prod_date][complete]' value='checked' <?php if($deadlines['arc_prod_date']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['arc_prod_date']->complete) ? $deadlines['arc_prod_date']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                         <div class="">
                             <label for="arc_press_date" class="form-label">To Press (ARC): </label>
-                            <input type="text" id="arc_press_date" class="form-input date" name="arc_press_date" value="<?=$deadlineValues['arc_press_date'] ?>" />
+                            <input type="text" class="form-input date" name="deadlines[arc_press_date][deadline_date]" value="<?=$deadlineValues['arc_press_date'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[arc_press_date][complete]' value='checked' <?php if($deadlines['arc_press_date']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['arc_press_date']->complete) ? $deadlines['arc_press_date']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                         <div class="">
                             <label for="prod_date" class="form-label">To Production: </label>
-                            <input type="text" id="prod_date" class="form-input date" name="prod_date" value="<?=$deadlineValues['prod_date'] ?>" />
+                                <input type="text" class="form-input date" name="deadlines[prod_date][deadline_date]" value="<?=$deadlineValues['prod_date'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[prod_date][complete]' value='checked' <?php if($deadlines['prod_date']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['prod_date']->complete) ? $deadlines['prod_date']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                         <div class="">
                             <label for="press_date" class="form-label">To Press: </label>
-                            <input type="text" id="press_date" class="form-input date" name="press_date" value="<?=$deadlineValues['press_date'] ?>" />
+                            <input type="text" class="form-input date" name="deadlines[press_date][deadline_date]" value="<?=$deadlineValues['press_date'] ?>" />
+                            <div class='complete-field'>
+                                <input type='checkbox' class='complete-check' name='deadlines[press_date][complete]' value='checked' <?php if($deadlines['press_date']->complete): ?>checked<?php endif; ?> />
+                                <span class='complete-text'><?=($deadlines['press_date']->complete) ? $deadlines['press_date']->complete_date : 'Not Complete' ?></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -197,6 +289,7 @@ foreach ($deadlines as $deadline=>$values) {
         </div>
         <div id="submit">
             <button id="update_book" name="update_book">Update</button>
+            <button id="delete_book" name="delete_book">Delete</button>
         </div>
     </form>
 </div>

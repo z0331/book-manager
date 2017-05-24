@@ -89,4 +89,20 @@ $(document).ready(function() {
         $('#to_copyedit').val(to_copyedit.format('YYYY-MM-DD'));
         $('#manuscript_finalized').val(manuscript_finalized.format('YYYY-MM-DD'));
     });
+
+    /*
+    * On Book View, checks status of checkbox when changed
+    * If checked, marks current date as completed date
+    * If unchecked, marks Not Completed
+    */
+    $('.complete-check').change(function() {
+        if(this.checked) {
+            var today = moment();
+            $(this).next().text(today.format('YYYY-MM-DD'));
+        }
+        else if(!this.checked) {
+            $(this).next().text('Not Complete');
+        }
+    })
 });
+
