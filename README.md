@@ -10,6 +10,7 @@ The purpose of this application is to provide a tool that is a bit more efficien
 <ul>
   <li><b>CouchDB:</b> JSON-based, document-oriented, NoSQL database system.</li>
   <li><b>jQuery:</b> For responsive form functionality.</li>
+  <li><b>Moment.js:</b> For parsing and manipulating dates.</li>
 </ul>
 
 <h2>To Do</h2>
