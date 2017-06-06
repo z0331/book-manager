@@ -38,71 +38,66 @@
 $bookIsbn = $_GET['isbn'];
 
 try {
-
-    /* 
-    *  Create an array from POST deadline fields that is comparable to the CouchDB document deadline array.
-    *  New array will contain any updates made, including whether deadline has been marked complete.
-    *  If complete, array will be loaded with today's date as date of completion.
-    */
     $bookByIsbn = $client->getDoc($bookIsbn);                       //Pull book info from document for display
     $bookTest = $client->asArray()->getDoc($bookIsbn);              //Pull same info as array for comparison to POST
-    
-    
-    if (isset($_POST['update_book'])) {
-        $newBookValues = array();                                   //Array to store POST array data
-        $newDeadlines = array();                                    //Array to store new deadline information
-        $newBookValues = $_POST;                                    //Copy POST array to variable in order to restore new deadline information
-        foreach($_POST['deadlines'] as $deadline=>$value) {
-            $newDeadlines[$deadline] = array(
-                'deadline_date' => $value['deadline_date']
-            );
-            if(!empty($value['complete'])) {
-                $newDeadlines[$deadline]['complete'] = true;
-                $newDeadlines[$deadline]['complete_date'] = date('Y-m-d');
-            }
-            else {
-                $newDeadlines[$deadline]['complete'] = false;
-                $newDeadlines[$deadline]['complete_date'] = "";
-            }
-        }
-
-        // Convert new deadlines array to object and store it.
-        // NOTE: apparently using json_decode here offers slower performance than creating
-        // a looping function, but frankly this is easier/cleaner and these arrays are not big enough
-        // for it to matter.
-        $newBookValues['deadlines'] = json_decode(json_encode($newDeadlines), false);
-        
-        /* 
-        *  Check for which fields are between POST and the saved data.
-        *  Store those fields in array $differences.
-        */ 
-        $differences = array();
-        $differences = checkIfArrayDifferent($bookTest, $newBookValues);
-
-        foreach($differences as $field) {
-            $bookByIsbn->$field = $newBookValues[$field];
-        }
-        try {
-            $response = $client->storeDoc($bookByIsbn);
-            } catch (Exception $e) {
-                echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
-        }
-        // Update stuff
-        // Go through fields that are different or new and update those fields
-        // Go through deadline fields that are different and update those elements
-
-    }
-
-    
-}   catch (Exception $e) {
-        echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
+} catch (Exception $e) {
+    echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
 }
 
 /* 
-*  Prepare array of proper deadline values to load into form
-*  If task is marked as completed, load the completed date
-*  Else, load the original deadline date
-*/
+ *  Create an array from POST deadline fields that is comparable to the CouchDB document deadline array.
+ *  New array will contain any updates made, including whether deadline has been marked complete.
+ *  If complete, array will be loaded with today's date as date of completion.
+ */
+ if (isset($_POST['update_book'])) {
+    $newBookValues = array();                                   //Array to store POST array data
+    $newDeadlines = array();                                    //Array to store new deadline information
+    $newBookValues = $_POST;                                    //Copy POST array to variable in order to restore new deadline information
+    foreach($_POST['deadlines'] as $deadline=>$value) {
+        $newDeadlines[$deadline] = array(
+            'deadline_date' => $value['deadline_date']
+        );
+        if(!empty($value['complete'])) {
+            $newDeadlines[$deadline]['complete'] = true;
+            $newDeadlines[$deadline]['complete_date'] = date('Y-m-d');
+        } else {
+            $newDeadlines[$deadline]['complete'] = false;
+            $newDeadlines[$deadline]['complete_date'] = "";
+        }
+    }
+
+    /*
+    * Convert new deadlines array to object and store it.
+    * NOTE: apparently using json_decode here offers slower performance than creating
+    * a looping function, but frankly this is easier/cleaner and these arrays are not big enough
+    * for it to matter.
+    */
+    $newBookValues['deadlines'] = json_decode(json_encode($newDeadlines), false);
+            
+    /* 
+    *  Check for which fields are between POST and the saved data after converting them both to arrays.
+    *  Store those fields in array $differences.
+    */ 
+    $differences = array();
+    $differences = checkIfArrayDifferent(json_decode(json_encode($bookTest), true), json_decode(json_encode($newBookValues), true));
+
+    if(count($differences)) {
+        foreach($differences as $field) {
+            $bookByIsbn->$field = $newBookValues[$field];
+        }
+    try {
+        $response = $client->storeDoc($bookByIsbn);
+        } catch (Exception $e) {
+            echo "ERROR: " . $e->getMessage() . " (" . $e->getCode() . ")<br>";
+        } 
+    }  
+ }
+
+/* 
+ *  Prepare array of proper deadline values to load into form
+ *  If task is marked as completed, load the completed date
+ *  Else, load the original deadline date
+ */
 $deadlines = array();
 $deadlineValues = array();
 foreach ($bookByIsbn->deadlines as $deadline=>$details) {
@@ -270,19 +265,41 @@ foreach ($deadlines as $deadline=>$values) {
             <div class="col-1-3">
                 <h2>Other Information</h2>
                 <div class="">
-                    <label for="adv_sign" class="form-label">Advance on Signature In: </label>
-                    <input type="text" id="adv_sign" class="form-input date" name="adv_sign" value="" />
+                    <label for="adv_sign_in" class="form-label">Advance on Signature In: </label>
+                    <input type="text" id="adv_sign_in" class="form-input date" name="adv_sign_in" value="<?=!empty($bookByIsbn->adv_sign_in) ? $bookByIsbn->adv_sign_in : '' ?>" />
+                </div>
+                <div class="">
+                    <label for="adv_sign_out" class="form-label">Advance on Signature Out: </label>
+                    <input type="text" id="adv_sign_out" class="form-input date" name="adv_sign_out" value="<?=!empty($bookByIsbn->adv_sign_out) ? $bookByIsbn->adv_sign_out : '' ?>" />
+                </div>
+                <div class="">
+                    <label for="pub_sign_in" class="form-label">Advance on Publication In: </label>
+                    <input type="text" id="pub_sign_in" class="form-input date" name="pub_sign_in" value="<?=!empty($bookByIsbn->pub_sign_in) ? $bookByIsbn->pub_sign_in : '' ?>" />
+                </div>
+                <div class="">
+                    <label for="pub_sign_out" class="form-label">Advance on Publication Out: </label>
+                    <input type="text" id="pub_sign_out" class="form-input date" name="pub_sign_out" value="<?=!empty($bookByIsbn->pub_sign_out) ? $bookByIsbn->pub_sign_out : '' ?>" />
+                </div>
+                <div class="">
+                    <label for="cip_in" class="form-label">CIP In: </label>
+                    <input type="text" id="cip_in" class="form-input date" name="cip_in" value="<?=!empty($bookByIsbn->cip_in) ? $bookByIsbn->cip_in : '' ?>" />
+                </div>
+                <div class="">
+                    <label for="cip_out" class="form-label">CIP Out: </label>
+                    <input type="text" id="cip_out" class="form-input date" name="cip_out" value="<?=!empty($bookByIsbn->cip_out) ? $bookByIsbn->cip_out : '' ?>" />
                 </div>
                 <h2>Custom Fields</h2>
                 <button type="button" id="new_field" name="new_field">Add Field</button>
                 <button type="button" id="delete_field" name="delete_field">Delete Field</button>
                 <div class="">
                     <div id="custom-fields">
-                        <div id="custom-field">
-                            Field:<br>
-                            <input type="text" id="field_name" name="field[name][]" value="Field Name" />
-                            <input type="text" id="field" name="field[value][]" />
-                        </div>
+                        <?php for($i=0;$i<count($bookByIsbn->field->name);$i++) { ?>
+                            <div id="custom-field">
+                                Field:<br>
+                                <input type="text" id="field_name" name="field[name][]" value="<?=$bookByIsbn->field->name[$i] ?>" />
+                                <input type="text" id="field" name="field[value][]" value="<?=$bookByIsbn->field->value[$i] ?>" />
+                            </div>
+                        <?php } ?>
                     </div>
                 </div>
             </div>

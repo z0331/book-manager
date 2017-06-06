@@ -38,6 +38,7 @@ $(document).ready(function() {
     */
     $('#new_field').click(function(e) {
         e.preventDefault();
+        
         $('#custom-fields').append('<div id="custom-field">Field:<br>'
                 + '<input type="text" id="field_name" name="field[name][]" value="Field Name" />'
                 + '<input type="text" id="field" name="field[value][]" />'

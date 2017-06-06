@@ -1,7 +1,18 @@
 {
     "require": {
-        "php-on-couch/php-on-couch": "^2.0"
+	"symfony/http-foundation": "^3.3",
+        "filp/whoops": "~2.1",
+        "nikic/fast-route": "^1.2",
+        "rdlowrey/auryn": "^1.4",
+        "doctrine/common": "^2.7",
+        "symfony/console": "^3.3",
+	"doctrine/couchdb": "@dev",
+	"doctrine/couchdb-odm": "@dev"
+    },
+    "autoload": {
+    	"psr-4": {
+		"BookManager\\": "src/"
+	    }
     }
-
 
 }

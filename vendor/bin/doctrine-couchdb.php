@@ -1,0 +1,1 @@
+../doctrine/couchdb-odm/bin/doctrine-couchdb.php

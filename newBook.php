@@ -155,6 +155,7 @@
                             <input type="text" id="field" name="field[value][]" />
                         </div>
                     </div>
+                    <button type="button" id="save_custom" name="save_custom">Save Custom Field List</button>
                 </div>
             </div>
         </div>
