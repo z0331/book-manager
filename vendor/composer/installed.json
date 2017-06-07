@@ -865,8 +865,8 @@
     },
     {
         "name": "symfony/http-foundation",
-        "version": "v3.3.1",
-        "version_normalized": "3.3.1.0",
+        "version": "v3.3.2",
+        "version_normalized": "3.3.2.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/http-foundation.git",
@@ -920,8 +920,8 @@
     },
     {
         "name": "symfony/debug",
-        "version": "v3.3.1",
-        "version_normalized": "3.3.1.0",
+        "version": "v3.3.2",
+        "version_normalized": "3.3.2.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/debug.git",
@@ -978,8 +978,8 @@
     },
     {
         "name": "symfony/console",
-        "version": "v3.3.1",
-        "version_normalized": "3.3.1.0",
+        "version": "v3.3.2",
+        "version_normalized": "3.3.2.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/console.git",

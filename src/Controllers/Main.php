@@ -2,17 +2,22 @@
 
 namespace BookManager\Controllers;
 
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request,
+    Symfony\Component\HttpFoundation\Response;
 
 class Main {
+    private $request;
     private $response;
 
-    public function __construct(Response $response) {
+    public function __construct(Request $request, Response $response) {
+        $this->request = $request;
         $this->response = $response;
     }
 
     public function show() {
-        $this->response->setContent('Hello World');
+        $content = 'Hello world!<br><br>';
+        $content .= 'Hello ' . $this->request->query->get('name', 'stranger');
+        $this->response->setContent($content);
         $this->response->send();
     }
 }

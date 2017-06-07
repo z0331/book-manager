@@ -23,13 +23,12 @@ $whoops->register();
 
 
 /**
-* Create request variable
+* Create request/response variables
 **/
-use Symfony\Component\HttpFoundation\Request,
-    Symfony\Component\HttpFoundation\Response;
+$injector = include('Dependencies.php');
 
-$request = Request::createFromGlobals();
-$response = new Response();
+$request = $injector->make('Symfony\Component\HttpFoundation\Request');
+$response = $injector->make('Symfony\Component\HttpFoundation\Response');
 
 
 /**
@@ -61,13 +60,13 @@ switch ($routeInfo[0]) {
         $method = $routeInfo[1][1];
         $vars = $routeInfo[2];
 
-        $class = new $className($response);
+        $class = $injector->make($className);
         $class->$method($vars);
         break;
 }
 
 /**
-* Load Doctrine classes
+* Load Doctrine DB classes and CouchDB DocumentManager
 **/
 $couchPath = __DIR__ . '/../';
 require_once $couchPath . 'vendor/doctrine/common/lib/Doctrine/Common/ClassLoader.php';

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "794704a89f30944effea53b98a682551",
+    "hash": "46cf86b60c9a7c727006f4b3b46eba72",
     "content-hash": "5b40e7847b1e67ca130e81911e5dcbc6",
     "packages": [
         {
@@ -786,7 +786,7 @@
         },
         {
             "name": "symfony/console",
-            "version": "v3.3.1",
+            "version": "v3.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
@@ -855,7 +855,7 @@
         },
         {
             "name": "symfony/debug",
-            "version": "v3.3.1",
+            "version": "v3.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/debug.git",
@@ -911,7 +911,7 @@
         },
         {
             "name": "symfony/http-foundation",
-            "version": "v3.3.1",
+            "version": "v3.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-foundation.git",
