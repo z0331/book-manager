@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Mustache' => array($vendorDir . '/mustache/mustache/src'),
     'Doctrine\\ODM\\CouchDB' => array($vendorDir . '/doctrine/couchdb-odm/lib'),
     'Doctrine\\CouchDB' => array($vendorDir . '/doctrine/couchdb/lib'),
     'Doctrine\\Common\\Lexer\\' => array($vendorDir . '/doctrine/lexer/lib'),
