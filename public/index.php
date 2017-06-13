@@ -3,5 +3,3 @@
 namespace BookManager;
 
 require __DIR__ . '/../src/Bootstrap.php';
-
-$book = new Models\Book;

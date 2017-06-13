@@ -41,6 +41,6 @@ class Book {
     /** @Field(type="mixed") */
     private $custom_fields;
 
-    /** @Field(type="mixed") */
-    private $deadlines;
+    /** @Column(type="mixed") */
+    public $deadlines;
 }
