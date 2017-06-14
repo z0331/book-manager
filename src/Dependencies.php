@@ -38,4 +38,24 @@ $injector->share('BookManager\Book\FileBookReader');
 $injector->alias('BookManager\Menu\MenuReader', 'BookManager\Menu\ArrayMenuReader');
 $injector->share('BookManager\Menu\ArrayMenuReader');
 
+/*
+* Doctrine CouchDB
+*/
+
+//DBClient
+$injector->alias('Doctrine\CouchDB\HTTP\Client', 'Doctrine\CouchDB\HTTP\SocketClient');
+$injector->define('Doctrine\CouchDB\CouchDBClient', [
+    ':databaseName' => 'book_manager'
+]);
+
+//Document Manager
+$documentPaths = array('localhost:5984');
+$config = new \Doctrine\ODM\CouchDB\Configuration();
+$metadataDriver = $config->newDefaultAnnotationDriver($documentPaths);
+
+$config->setProxyDir(__DIR__ . '/proxies');
+$config->setMetadataDriverImpl($metadataDriver);
+$config->setLuceneHandlerName('_fti');
+$injector->share($config);
+
 return $injector;

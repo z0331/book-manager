@@ -22,4 +22,8 @@ class NewBook {
        $this->response->setContent($html);
        $this->response->send();
     }
+
+    public function editBook($bookId) {
+        //Look up book and populate form with information
+    }
 }

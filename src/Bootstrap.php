@@ -66,7 +66,7 @@ switch ($routeInfo[0]) {
 }
 
 /**
-* Load Doctrine DB classes and CouchDB DocumentManager
+* Load Doctrine DB classes
 **/
 $couchPath = __DIR__ . '/../';
 require_once $couchPath . 'vendor/doctrine/common/lib/Doctrine/Common/ClassLoader.php';
@@ -87,17 +87,3 @@ $loader->register();
 $annotationNs = 'Doctrine\\ODM\\CouchDB\\Mapping\\Annotations';
 $annotationRegistery = new \Doctrine\Common\Annotations\AnnotationRegistry;
 $annotationRegistery::registerAutoloadNamespace($annotationNs, $couchPath);
-
-$databaseName = 'book_manager';
-$documentPaths = array('localhost:5984');
-$httpClient = new \Doctrine\CouchDB\HTTP\SocketClient();
-$dbClient = new \Doctrine\CouchDB\CouchDBClient($httpClient, $databaseName);
-
-$config = new \Doctrine\ODM\CouchDB\Configuration();
-$metadataDriver = $config->newDefaultAnnotationDriver($documentPaths);
-
-$config->setProxyDir(__DIR__ . '/proxies');
-$config->setMetadataDriverImpl($metadataDriver);
-$config->setLuceneHandlerName('_fti');
-
-$dm = new \Doctrine\ODM\CouchDB\DocumentManager($dbClient, $config);
