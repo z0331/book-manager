@@ -20,7 +20,10 @@ $injector->share('Symfony\Component\HttpFoundation\Response');
 */
 $injector->delegate('Twig_Environment', function() use ($injector) {
     $loader = new Twig_Loader_Filesystem(__DIR__ . '/Templates');
-    $twig = new Twig_Environment($loader);
+    $twig = new Twig_Environment($loader, array(
+        'debug' => true,
+    ));
+    $twig->addExtension(new Twig_Extension_Debug());
     return $twig;
 });
 $injector->alias('BookManager\Templates\Renderer', 'BookManager\Templates\TwigRenderer');
@@ -37,6 +40,9 @@ $injector->share('BookManager\Book\FileBookReader');
 
 $injector->alias('BookManager\Menu\MenuReader', 'BookManager\Menu\ArrayMenuReader');
 $injector->share('BookManager\Menu\ArrayMenuReader');
+
+$injector->alias('BookManager\BookList\BookListReader', 'BookManager\BookList\ArrayBookListReader');
+$injector->share('BookManager\BookList\ArrayBookListReader');
 
 /*
 * Doctrine CouchDB

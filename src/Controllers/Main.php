@@ -6,7 +6,8 @@ use Symfony\Component\HttpFoundation\Request,
     Symfony\Component\HttpFoundation\Response,
     BookManager\Templates\FrontendRenderer,
     BookManager\Models\DatabaseManager,
-    BookManager\Models\Book;
+    BookManager\Models\Book,
+    BookManager\Models\BooksDesignDocument;
 
 class Main {
     private $request;
@@ -27,15 +28,25 @@ class Main {
 
     public function show() {
         //Get data for all books and render
-        $book = $this->databaseManager->getDbClient()->findDocument('9781628727807');
-        $dm = $this->databaseManager->getDocumentManager();
-        $bookTest = new Book();
-        echo "<div class='content'>";
-        var_dump($dm);
-        var_dump($book);
-        echo "</div>";
-        $data = ['name' => 'Maxim'];
-        $html = $this->frontendRenderer->render('Main', $data);
+        $dataSet = array(
+            'books' => array(),
+            'seasons' => array()
+        );
+        $this->databaseManager->getDbClient()->createDesignDocument('books', new BooksDesignDocument);
+        $queryBooks = $this->databaseManager->getDbClient()->createViewQuery('books', 'allBooks');
+        $querySeasonYears = $this->databaseManager->getDbClient()->createViewQuery('books', 'seasonYear');
+
+        $result = $queryBooks->execute();
+                foreach($result as $row) {
+            $dataSet['books'][] = $row['value'];
+        }
+
+        $result = $querySeasonYears->execute();
+        foreach($result as $row) {
+            $dataSet['seasons'][] = $row;
+        }
+
+        $html = $this->frontendRenderer->render('Main', $dataSet);
         $this->response->setContent($html);
         $this->response->send();
     }

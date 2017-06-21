@@ -1,5 +1,31 @@
 {% extends "Layout.html" %}
 {% block content %}
-    <h1>Hello World</h1>
-    Hello {{ name }}
+    <table class="pure-table">
+        <tr>
+            <th>MS Deadline</th>
+            <th>Edits to Author</th>
+            <th>Revisions In</th>
+            <th>To Copyedit</th>
+            <th>MS Finalized</th>
+            <th>ARC Production</th>
+            <th>ARC Press</th>
+            <th>Production Date</th>
+            <th>Press Date</th>
+        </tr>
+    {% for book in bookList.0 %}
+        <tr>
+            <td>{{ book.title }}</td>
+        </tr>
+        <tr>
+            {% for deadline in book.deadlines %}
+                {% if deadline.complete %}
+                    <td>Complete: {{ deadline.complete_date }}</td>
+                {% else %}
+                    <td>{{ deadline.deadline_date }}</td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </table>
+
 {% endblock %}
