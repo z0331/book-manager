@@ -3,8 +3,7 @@
 namespace BookManager\Models;
 
 use Doctrine\CouchDB\CouchDBClient,
-    Doctrine\ODM\CouchDB\DocumentManager,
-    Doctrine\CouchDB\View\FolderDesignDocument;
+    Doctrine\ODM\CouchDB\DocumentManager;
 
 /**
  * DatabaseManager class to encapsulate both Doctrine CouchDB API wrapper and Object Document Mappers

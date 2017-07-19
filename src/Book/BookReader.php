@@ -3,6 +3,6 @@
 namespace BookManager\Book;
 
 interface BookReader {
-    public function readBySlug(string $slug) : string;
+    public function readByIsbn(array $book) : array;
 }
 

@@ -35,14 +35,17 @@ $injector->alias('Bookmanager\Templates\FrontendRenderer', 'BookManager\Template
 $injector->define('BookManager\Book\FileBookReader', [
     ':bookFolder' => __DIR__ . '/../books'
 ]);
-$injector->alias('BookManager\Book\BookReader', 'BookManager\Book\FileBookReader');
-$injector->share('BookManager\Book\FileBookReader');
+$injector->alias('BookManager\Book\BookReader', 'BookManager\Book\ArrayBookReader');
+$injector->share('BookManager\Book\ArrayBookReader');
 
 $injector->alias('BookManager\Menu\MenuReader', 'BookManager\Menu\ArrayMenuReader');
 $injector->share('BookManager\Menu\ArrayMenuReader');
 
 $injector->alias('BookManager\BookList\BookListReader', 'BookManager\BookList\ArrayBookListReader');
 $injector->share('BookManager\BookList\ArrayBookListReader');
+
+$injector->alias('BookManager\Models\BookRepositoryInterface', 'BookManager\Models\BookRepository');
+$injector->share('BookManager\Models\BookRepository');
 
 /*
 * Doctrine CouchDB

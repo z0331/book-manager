@@ -1,31 +1,40 @@
 {% extends "Layout.html" %}
 {% block content %}
+    <div class="update">
+        <button class="pure-button pure-button-primary" id="update-list">Update</button>
+    </div>
     <table class="pure-table">
-        <tr>
-            <th>MS Deadline</th>
-            <th>Edits to Author</th>
-            <th>Revisions In</th>
-            <th>To Copyedit</th>
-            <th>MS Finalized</th>
-            <th>ARC Production</th>
-            <th>ARC Press</th>
-            <th>Production Date</th>
-            <th>Press Date</th>
-        </tr>
-    {% for book in bookList.0 %}
-        <tr>
-            <td>{{ book.title }}</td>
-        </tr>
-        <tr>
-            {% for deadline in book.deadlines %}
-                {% if deadline.complete %}
-                    <td>Complete: {{ deadline.complete_date }}</td>
-                {% else %}
-                    <td>{{ deadline.deadline_date }}</td>
-                {% endif %}
-            {% endfor %}
-        </tr>
+        {% for key,value in bookList %}
+            <thead>
+                <tr class='season'>
+                    <td colspan=100>{{ key }}</td>
+                </tr>
+                <tr class='deadline-headers'>
+                    <th>MS Deadline</th>
+                    <th>Edits to Author</th>
+                    <th>Revisions In</th>
+                    <th>To Copyedit</th>
+                    <th>MS Finalized</th>
+                    <th>ARC Production</th>
+                    <th>ARC Press</th>
+                    <th>Production Date</th>
+                    <th>Press Date</th>
+                </tr>
+            </thead>
+        {% for book in value %}
+            <tr>
+                <td colspan=100><a href="{{ book.isbn }}">{{ book.title }}</a></td>
+            </tr>
+            <tr>
+                {% for deadline in book.deadlines %}
+                    {% if deadline.complete %}
+                        <td>Complete: {{ deadline.complete_date }}</td>
+                    {% else %}
+                        <td {% if "now"|date("Y-m-d") > deadline.deadline_date %} class='late' {% endif %}>{{ deadline.deadline_date }}</td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
     {% endfor %}
     </table>
-
 {% endblock %}

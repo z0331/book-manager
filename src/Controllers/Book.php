@@ -6,34 +6,37 @@ use Symfony\Component\HttpFoundation\Request,
     Symfony\Component\HttpFoundation\Response,
     BookManager\Templates\FrontendRenderer,
     BookManager\Book\BookReader,
+    BookManager\Models\BookRepository,
+    BookManager\Models\BooksDesignDocument,
     BookManager\Book\InvalidBookException;
 
 class Book {
     private $request;
     private $response;
     private $frontendRenderer;
-    private $bookReader;
+    private $bookRepository;
 
     public function __construct(Request $request, 
                                 Response $response,
                                 FrontendRenderer $frontendRenderer,
-                                BookReader $bookReader) {
+                                BookRepository $bookRepository) {
         $this->request = $request;
         $this->response = $response;
         $this->frontendRenderer = $frontendRenderer;
-        $this->bookReader = $bookReader;
+        $this->bookRepository = $bookRepository;
     }
 
-    public function view($params) {
-        $slug = $params['slug'];
+    public function view($isbn) {
+        var_dump($isbn);
         try {
-            $data['content'] = $this->bookReader->readBySlug($slug);
+            $book = $this->bookRepository->allDataByBook($isbn);
         } catch (InvalidBookException $e) {
             $this->response->setStatusCode(404);
             $this->response->setContent('404 - Book Not Found');
             return $this->response->send();
         }
-        $html = $this->frontendRenderer->render('Book', $data);
+        //var_dump($book);
+        $html = $this->frontendRenderer->render('Book', $book);
         $this->response->setContent($html);
         $this->response->send();
     }

@@ -10,16 +10,28 @@ class BooksDesignDocument implements \Doctrine\CouchDB\View\DesignDocument {
         return array(
             'language' => 'javascript',
             'views' => array(
-                'allBooks' => array(
+                'booksWithDeadlinesBySeason' => array(
                     'map' => 'function(doc) {
-                        if(\'book\' == doc.type) {
+                        if(doc.type == \'book\' && doc.season && doc.season_year) {
+                            emit([doc.season, doc.season_year], [doc._id, doc.title, doc.deadlines]);
+                        }
+                    }'
+                ),
+                'allDataByBook' => array(
+                    'map' => 'function(doc) {
+                        if(doc.type == \'book\') {
                             emit(doc._id, doc);
                         }
                     }'
                 ),
-                'seasonYear' => array(
+                'allSeasons' => array(
                     'map' => 'function(doc) {
-                        emit(doc.season_year, null);
+                        if(doc.type == \'book\' && doc.season && doc.season_year) {
+                            emit([doc.season, doc.season_year], null);
+                        }
+                    }',
+                    'reduce' => 'function(keys, values) {
+                        return true;
                     }'
                 )
             ),
